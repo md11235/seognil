@@ -1,4 +1,4 @@
-;;; seognil.el --- query words in massaged dictioneries in lingoes format -*- Mode: Emacs-Lisp -*-
+;;; seognil.el --- query words in massaged dictionaries in lingoes format -*- Mode: Emacs-Lisp -*-
 
 ;; Copyright (C) 2012 Madsen Zhang
 
