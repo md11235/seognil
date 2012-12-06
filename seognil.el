@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 Madsen Zhang
 
 ;; Author: md11235@gmail.com
-;; Created: 2005-07-31
+;; Created: 2012-12-02
 
 ;; NOTE:  THIS IS A BETA VERSION OF PAREDIT.  USE AT YOUR OWN RISK.
 
