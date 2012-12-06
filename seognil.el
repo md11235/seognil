@@ -56,7 +56,7 @@
   "the postfix for dictionary file(where words and their definitions are stored")
 
 (defconst *INDEX-FILENAME-EXTENSION* ".ld2.idx"
-  "the postfix for dictionary file(where words and their definitions are stored")
+  "the postfix for index file(where words and their definitions are stored")
 
 (defvar seognil-dictionary-path nil
   "the fullpath of the parent directory containing different folders of dictionaries")
