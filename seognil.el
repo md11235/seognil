@@ -5,7 +5,7 @@
 ;; Author: md11235@gmail.com
 ;; Created: 2012-12-02
 
-;; NOTE:  THIS IS A BETA VERSION OF PAREDIT.  USE AT YOUR OWN RISK.
+;; NOTE:  THIS IS A BETA VERSION OF SEOGNIL.  USE AT YOUR OWN RISK.
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
