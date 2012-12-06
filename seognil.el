@@ -1,9 +1,11 @@
-;;; seognil.el --- a program to query words in massaged dictioneries
-;;; of lingoes format
+;;; seognil.el --- query words in massaged dictioneries in lingoes format -*- Mode: Emacs-Lisp -*-
 
-;; Copyright 2012 Madsen Zhang
-;;
+;; Copyright (C) 2012 Madsen Zhang
+
 ;; Author: md11235@gmail.com
+;; Created: 2005-07-31
+
+;; NOTE:  THIS IS A BETA VERSION OF PAREDIT.  USE AT YOUR OWN RISK.
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -16,12 +18,11 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, write to the Free Software
-;; Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with this program; If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; This is an emacs lisp script to query words in dictionaries of lingoes format
+;; This is an emacs lisp script to query words in dictionaries in lingoes format
 
 ;; Put this file into your load-path and the following into your
 ;; ~/.emacs:
