@@ -24,7 +24,18 @@
 
 ;; This is an emacs lisp script to query words in dictionaries in lingoes format
 
+;; How to massage dictionaries from the lingoes format to be usable  by
+;; this program:
+
+;; 1. download a java program from the url below:
+;; http://dict4cn.googlecode.com/svn/trunk/importer/src/LingoesLd2Reader.java
+;; 2. compile it
+;; 3. use it to dump contents of a dictionary file in the lingoes format
+;; 4. rename the file extension ".output" of a dumped file to ".dict"
+;; 5. use gzip to compress that file with the ".dict" extension.
+
 ;; Put this file into your load-path and the following into your
+
 ;; ~/.emacs:
 ;; (require 'seognil)
 ;; (setq seognil-dictionary-path "d:/src/lingoes/dict")
