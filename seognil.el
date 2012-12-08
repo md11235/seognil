@@ -55,7 +55,6 @@
 ;; (setq seognil-dictionaries '("ADict" "BDict" "CDict"))
 ;; (global-set-key (kbd "C-c d") 'seognil-search)
 
-
 ;;; Code:
 
 (require 'w3m)
@@ -81,7 +80,6 @@
   "The name of the buffer of seognil.")
 
 (defun seognil-word-definition-position (dictionary-name word)
-  ;; with-current-buffer "collins2.ld2.idx"
   (with-temp-buffer
     (insert-file-contents (concat seognil-dictionary-path
                                   "/"
