@@ -7,11 +7,14 @@
     (let ((words-list (read (buffer-substring-no-properties (point-min)
                                                             (point-max)))))
       (loop for word in words-list
-            do (assert (let ((result (seognil-word-definition-position dicitonary-name word)))
-                         (and (not (null result))
-                              (string-equal word
-                                            (car result))))
-                       t)))))
+            do (cl-assert ((lambda (word)
+                             (let ((result (seognil-word-definition-position dicitonary-name word)))
+                               (and (not (null result))
+                                    (string-equal word
+                                                  (car result))))) word)
+                          t
+                          "No index for %s is found."
+                          word)))))
 
 ;; run the test using
 ;; (seognil-test-query-words-in-dict "adict-words-list.txt" "ADict")
