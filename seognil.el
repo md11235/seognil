@@ -155,3 +155,24 @@
           (w3m-buffer)
           (switch-to-buffer seognil-buffer-name)
           (setq buffer-read-only t))))
+
+(defun seognil-sort-fields (field beg end)
+  "Sort lines in region lexicographically by the ARGth field of each line.
+Fields are separated by whitespace and numbered from 1 up.
+With a negative arg, sorts by the ARGth field counted from the right.
+Called from a program, there are three arguments:
+FIELD, BEG and END.  BEG and END specify region to sort.
+The variable `sort-fold-case' determines whether alphabetic case affects
+the sort order.
+sort specifically for seognil.."
+  (interactive "p\nr")
+  (let ;; To make `end-of-line' and etc. to ignore fields.
+      ((inhibit-field-text-motion t))
+    (sort-fields-1 field beg end
+		   (function (lambda ()
+			       (sort-skip-fields field)
+			       nil))
+		   ;; (function (lambda () (skip-chars-forward "^,\t\n")))
+           (function (lambda ()
+                       (looking-at ".*\\(, [0-9]+\\)")
+                       (goto-char (match-beginning 1)))))))
