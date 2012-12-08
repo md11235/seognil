@@ -10,8 +10,8 @@
             do (assert (let ((result (seognil-word-definition-position dicitonary-name word)))
                          (and (not (null result))
                               (string-equal word
-                                            (car result)))
-                         t))))))
+                                            (car result))))
+                       t)))))
 
 ;; run the test using
 ;; (seognil-test-query-words-in-dict "adict-words-list.txt" "ADict")
