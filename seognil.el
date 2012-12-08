@@ -153,4 +153,5 @@
                      (insert "<br/> <br/>")))
           
           (w3m-buffer)
-          (switch-to-buffer seognil-buffer-name))))
+          (switch-to-buffer seognil-buffer-name)
+          (setq buffer-read-only t))))
