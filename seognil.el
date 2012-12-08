@@ -24,22 +24,35 @@
 
 ;; This is an emacs lisp script to query words in dictionaries in lingoes format
 
-;; How to massage dictionaries from the lingoes format to be usable  by
-;; this program:
+;; How to massage one dictionary in the lingoes format to be usable by
+;; this program. suppose that one dictionary is named "ADict".
 
 ;; 1. download a java program from the url below:
 ;; http://dict4cn.googlecode.com/svn/trunk/importer/src/LingoesLd2Reader.java
 ;; 2. compile it
-;; 3. use it to dump contents of a dictionary file in the lingoes format
-;; 4. rename the file extension ".output" of a dumped file to ".dict"
-;; 5. use gzip to compress that file with the ".dict" extension.
+;; 3. use the compiled java program to dump contents of ADict.ld2
+;; 4. rename "ADict.ld2.output" to "ADict.ld2.dict"
+;; 5. it turns out that "ADict.ld2.idx" generated from step 3 does not have
+;;    all the words defined in the "ADict.ld2.dict" file. so regenerate the
+;;    idx file using one line of awk. for example:
+;;    awk -F "=" 'BEGIN {x=0}; {print $1 ", " x; x++}' ADict.ld2.dict > ADict.ld2.idx
+;; 6. sort the content of the new .idx file inside emacs using
+;;    "seognil-sort-fields" (which is defined in this program file)
+;;    with the elisp variable "sort-fold-case" being nil.
+;; 7. use gzip to compress "ADict.ld2.dict".
+;; 8. move "ADict.ld2.idx" and "ADict.ld2.dict" into a directory named
+;;    "ADict".
+;; 9. repeat steps 1~8 above for another dictionary.
+
+;; finaly, put all these dictionary directories, say "ADict", "BDict", "CDict"
+;; into another directory, for example "d:/src/lingoes/dict".
 
 ;; Put this file into your load-path and the following into your
 
 ;; ~/.emacs:
 ;; (require 'seognil)
 ;; (setq seognil-dictionary-path "d:/src/lingoes/dict")
-;; (setq seognil-dictionaries '("CollinsCobuild" "Collins"))
+;; (setq seognil-dictionaries '("ADict" "BDict" "CDict"))
 ;; (global-set-key (kbd "C-c d") 'seognil-search)
 
 
