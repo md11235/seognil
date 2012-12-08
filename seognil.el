@@ -114,7 +114,7 @@
                                            *WORD-INDEX-SEPARATOR*)))
                 (message "got word: %s, line number: %s\n" (car result) (nth 1 result))
                 (setq end-result result)))
-             ((string-lessp word (downcase current-word))
+             ((string-lessp word current-word)
               (setq end-line-number (- middle-line-number 1)))
              (t
               (setq begin-line-number (+ middle-line-number 1)))))))
