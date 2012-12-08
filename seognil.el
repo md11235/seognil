@@ -97,22 +97,15 @@
         (let ((middle-line-number (/ (+ begin-line-number end-line-number) 2)))
           (goto-line middle-line-number)
           (beginning-of-line)
-          (let ((current-word (progn
-                                (looking-at "[^,]*,")
-                                (buffer-substring-no-properties (match-beginning 0)
-                                                                (- (match-end 0) 1)))))
-            (message "word: %s, %d, %d, %d\n" current-word middle-line-number begin-line-number end-line-number)
+          (let* ((word-index-pair (seognil-parse-word-index-pair (thing-at-point 'line)))
+                 (current-word (car word-index-pair)))
+            ;; (message "word: %s, %d, %d, %d\n" current-word middle-line-number begin-line-number end-line-number)
             (cond
              ((string-equal word current-word)
               (setq begin-line-number (+ end-line-number 1)) ;; break out of the while
-              (looking-at ",")
-              (goto-char (match-beginning 0))
-              (let* ((result (split-string (buffer-substring-no-properties (point)
-                                                                           (progn
-                                                                             (end-of-line)
-                                                                             (point)))
-                                           *WORD-INDEX-SEPARATOR*)))
-                (message "got word: %s, line number: %s\n" (car result) (nth 1 result))
+
+              (let ((result word-index-pair))
+                (message "got word: %s, line number: %s\n" (car result) (cdr result))
                 (setq end-result result)))
              ((string-lessp word current-word)
               (setq end-line-number (- middle-line-number 1)))
@@ -136,7 +129,7 @@
 (defun seognil-query-word-definition-in-dict (dictionary-name word)
   (let ((word-index-cons (seognil-word-definition-position dictionary-name word)))
     (if (consp word-index-cons)
-        (seognil-extract-word-definition-in-dict dictionary-name (nth 1 word-index-cons))
+        (seognil-extract-word-definition-in-dict dictionary-name (cdr word-index-cons))
       nil)))
 
 (defun seognil-search ()
@@ -168,6 +161,18 @@
           (w3m-buffer)
           (switch-to-buffer seognil-buffer-name)
           (setq buffer-read-only t))))
+
+;;;; utils
+
+
+(defun seognil-parse-word-index-pair (line-content)
+  (let ((current-line-content line-content)
+        word
+        index)
+    (setq word (car (split-string (thing-at-point 'line)
+                                  ", [0-9]+")))
+    (setq index (substring current-line-content (+ 2 (length word)) -1))
+    (cons word index)))
 
 (defun seognil-sort-fields (field beg end)
   "Sort lines in region lexicographically by the ARGth field of each line.
