@@ -58,6 +58,7 @@
 ;;; Code:
 
 (require 'w3m)
+(require 'parse-time)
 
 (provide 'seognil)
 
