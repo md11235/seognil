@@ -179,7 +179,7 @@
   (let ((current-line-content line-content)
         word
         index)
-    (setq word (car (split-string (thing-at-point 'line)
+    (setq word (car (split-string line-content
                                   ", [0-9]+")))
     (setq index (substring current-line-content (+ 2 (length word)) -1))
     (cons word index)))
