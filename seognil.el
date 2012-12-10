@@ -39,10 +39,11 @@
 ;; 6. sort the content of the new .idx file inside emacs using
 ;;    "seognil-sort-fields" (which is defined in this program file)
 ;;    with the elisp variable "sort-fold-case" being nil.
-;; 7. use gzip to compress "ADict.ld2.dict".
-;; 8. move "ADict.ld2.idx" and "ADict.ld2.dict" into a directory named
+;; 7. move "ADict.ld2.idx" and "ADict.ld2.dict" into a directory named
 ;;    "ADict".
-;; 9. repeat steps 1~8 above for another dictionary.
+;;    7.1 [OPTIONAL] use gzip to compress "ADict.ld2.dict" and set the variable
+;;        `seognil-use-gzipped-dictionaries' to t, in order to save harddisk space.
+;; 8. repeat steps 1~8 above for another dictionary.
 
 ;; finaly, put all these dictionary directories, say "ADict", "BDict", "CDict"
 ;; into another directory, for example "d:/src/lingoes/dict".
@@ -66,7 +67,7 @@
 (defconst *WORD-INDEX-SEPARATOR* ", "
   "the string between the word and its index position in the dict file")
 
-(defconst *DICT-FILENAME-EXTENSION* ".ld2.dict.gz"
+(defconst *DICT-FILENAME-EXTENSION* ".ld2.dict"
   "the postfix for dictionary file(where words and their definitions are stored")
 
 (defconst *INDEX-FILENAME-EXTENSION* ".ld2.idx"
@@ -77,6 +78,9 @@
 
 (defvar seognil-dictionaries nil
   "the list of dictionaries enabled")
+
+(defvar seognil-use-gzipped-dictionaries nil
+  "whether dictionaries are compressed using gzip.")
 
 (defvar seognil-buffer-name "*seognil*"
   "The name of the buffer of seognil.")
@@ -119,7 +123,11 @@
                                   "/"
                                   dictionary-name
                                   "/"
-                                  dictionary-name *DICT-FILENAME-EXTENSION*))
+                                  dictionary-name
+                                  *DICT-FILENAME-EXTENSION*
+                                  (cond
+                                   (seognil-use-gzipped-dictionaries ".gz")
+                                   (t ""))))
     (goto-line (+ 1 (parse-integer definition-line-number)))
     (buffer-substring-no-properties (point)
                                     (progn
