@@ -109,7 +109,6 @@
               (setq begin-line-number (+ end-line-number 1)) ;; break out of the while
 
               (let ((result word-index-pair))
-                (message "got word: %s, line number: %s\n" (car result) (cdr result))
                 (setq end-result result)))
              ((string-lessp word current-word)
               (setq end-line-number (- middle-line-number 1)))
