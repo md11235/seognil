@@ -58,6 +58,7 @@
 ;;; Code:
 
 (require 'w3m)
+(require 'thingatpt)
 (require 'parse-time)
 
 (provide 'seognil)
@@ -134,12 +135,14 @@
 (defun seognil-search ()
   "read the WORD from mini buffer and query it in DICTIONARY-NAME"
   (interactive)
-  (let (word
+  (let ((word (thing-at-point 'word))
         ;; fixme: parse these two numbers on the fly
         (begin-line-number 1)
         (end-line-number 102385))
-    (setq word (read-from-minibuffer "Word:"))
-
+    (setq word (read-string (format "Query Word(default %s):" word)
+                            nil
+                            nil
+                            word))
     (with-current-buffer (get-buffer-create seognil-buffer-name)
           (setq buffer-read-only nil)
           (erase-buffer)
