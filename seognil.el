@@ -85,6 +85,15 @@
 (defvar seognil-buffer-name "*seognil*"
   "The name of the buffer of seognil.")
 
+;; copied from http://www.emacswiki.org/emacs/ElispCookbook#toc6
+
+(defun chomp (str)
+  "Chomp leading and tailing whitespace from STR."
+  (while (string-match "\\`\n+\\|^\\s-+\\|\\s-+$\\|\n+\\'"
+                       str)
+    (setq str (replace-match "" t t str)))
+  str)
+
 (defun seognil-word-definition-position (dictionary-name word)
   (with-temp-buffer
     (insert-file-contents (concat seognil-dictionary-path
@@ -146,10 +155,12 @@
         ;; fixme: parse these two numbers on the fly
         (begin-line-number 1)
         (end-line-number 102385))
-    (setq word (read-string (format "Query Word(default %s):" word)
-                            nil
-                            nil
-                            word))
+    (setq word (chomp (read-string (if word
+                                       (format "Query Word(default %s):" word)
+                                     (format "Query Word:"))
+                                   nil
+                                   nil
+                                   word)))
     (with-current-buffer (get-buffer-create seognil-buffer-name)
           (setq buffer-read-only nil)
           (erase-buffer)
