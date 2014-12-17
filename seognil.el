@@ -136,11 +136,11 @@
                                   (cond
                                    (seognil-use-gzipped-dictionaries ".gz")
                                    (t ""))))
-    (goto-line (+ 1 (parse-integer definition-line-number)))
-    (buffer-substring-no-properties (point)
-                                    (progn
-                                      (end-of-line)
-                                      (point)))))
+    (save-excursion (goto-line (+ 1 (cl-parse-integer definition-line-number)))
+     (buffer-substring-no-properties (point)
+                                     (progn
+                                       (end-of-line)
+                                       (point))))))
 
 (defun seognil-query-word-definition-in-dict (dictionary-name word)
   (let ((word-index-cons (seognil-word-definition-position dictionary-name word)))
