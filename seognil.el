@@ -61,13 +61,12 @@
 (require 'w3m)
 (require 'thingatpt)
 (require 'parse-time)
-
-(provide 'seognil)
+(require 'emacsql)
 
 (defconst *WORD-INDEX-SEPARATOR* ", "
   "the string between the word and its index position in the dict file")
 
-(defconst *DICT-FILENAME-EXTENSION* ".ld2.dict"
+(defconst *DICT-FILENAME-EXTENSION* ".sqlite"
   "the postfix for dictionary file(where words and their definitions are stored")
 
 (defconst *INDEX-FILENAME-EXTENSION* ".ld2.idx"
@@ -94,67 +93,19 @@
     (setq str (replace-match "" t t str)))
   str)
 
-(defun seognil-word-definition-position (dictionary-name word)
-  (with-temp-buffer
-    (insert-file-contents (concat seognil-dictionary-path
-                                  "/"
-                                  dictionary-name
-                                  "/"
-                                  dictionary-name *INDEX-FILENAME-EXTENSION*))
-    (let ((end-result nil)
-          (begin-line-number 1)
-          (end-line-number (count-lines 1
-                                        (progn (end-of-buffer)
-                                               (point)))))
-      (while (<= begin-line-number end-line-number)
-        (let ((middle-line-number (/ (+ begin-line-number end-line-number) 2)))
-          (goto-line middle-line-number)
-          (beginning-of-line)
-          (let* ((word-index-pair (seognil-parse-word-index-pair (thing-at-point 'line)))
-                 (current-word (car word-index-pair)))
-            ;; (message "word: %s, %d, %d, %d\n" current-word middle-line-number begin-line-number end-line-number)
-            (cond
-             ((string-equal word current-word)
-              (setq begin-line-number (+ end-line-number 1)) ;; break out of the while
-
-              (let ((result word-index-pair))
-                (setq end-result result)))
-             ((string-lessp word current-word)
-              (setq end-line-number (- middle-line-number 1)))
-             (t
-              (setq begin-line-number (+ middle-line-number 1)))))))
-      end-result)))
-
-(defun seognil-extract-word-definition-in-dict (dictionary definition-line-number)
-  (with-temp-buffer
-    (insert-file-contents (concat seognil-dictionary-path
-                                  "/"
-                                  dictionary-name
-                                  "/"
-                                  dictionary-name
-                                  *DICT-FILENAME-EXTENSION*
-                                  (cond
-                                   (seognil-use-gzipped-dictionaries ".gz")
-                                   (t ""))))
-    (save-excursion (goto-line (+ 1 (cl-parse-integer definition-line-number)))
-     (buffer-substring-no-properties (point)
-                                     (progn
-                                       (end-of-line)
-                                       (point))))))
-
 (defun seognil-query-word-definition-in-dict (dictionary-name word)
-  (let ((word-index-cons (seognil-word-definition-position dictionary-name word)))
-    (if (consp word-index-cons)
-        (seognil-extract-word-definition-in-dict dictionary-name (cdr word-index-cons))
-      nil)))
+  (emacsql-with-connection
+      (dict-db (emacsql-sqlite (concat seognil-dictionary-path "/" dictionary-name "/" dictionary-name *DICT-FILENAME-EXTENSION*)))
+    (caar (emacsql dict-db
+                   [:select [definition]
+                            :from word_definitions
+                            :where (= word $s1)]
+                   word))))
 
 (defun seognil-search ()
   "read the WORD from mini buffer and query it in DICTIONARY-NAME"
   (interactive)
-  (let ((word (thing-at-point 'word))
-        ;; fixme: parse these two numbers on the fly
-        (begin-line-number 1)
-        (end-line-number 102385))
+  (let ((word (thing-at-point 'word)))
     (setq word (chomp (read-string (if word
                                        (format "Query Word(default %s):" word)
                                      (format "Query Word:"))
@@ -183,8 +134,6 @@
           (setq buffer-read-only t))))
 
 ;;;; utils
-
-
 (defun seognil-parse-word-index-pair (line-content)
   (let ((current-line-content line-content)
         word
@@ -214,3 +163,5 @@ sort specifically for seognil.."
            (function (lambda ()
                        (looking-at ".*\\(, [0-9]+\\)")
                        (goto-char (match-beginning 1)))))))
+
+(provide 'seognil)
