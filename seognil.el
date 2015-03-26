@@ -105,7 +105,7 @@
 (defun seognil-search ()
   "read the WORD from mini buffer and query it in DICTIONARY-NAME"
   (interactive)
-  (let ((word (thing-at-point 'word)))
+  (let ((word (thing-at-point 'word t)))
     (setq word (chomp (read-string (if word
                                        (format "Query Word(default %s):" word)
                                      (format "Query Word:"))
