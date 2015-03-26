@@ -102,6 +102,33 @@
                             :where (= word $s1)]
                    word))))
 
+(defun seognil-search-phrase (word)
+  (with-current-buffer (get-buffer-create seognil-buffer-name)
+    (setq buffer-read-only nil)
+    (erase-buffer)
+
+    (loop for dict in seognil-dictionaries
+          do (progn
+               (insert (concat "[dict: " dict "]<br/> <br/>"))
+               (let ((result (seognil-query-word-definition-in-dict dict word)))
+                 (if result
+                     (insert result)
+                   (insert "No definitions found.")
+                   ))
+               (insert "<br/> <br/>")))
+    
+    (w3m-buffer)
+    (switch-to-buffer seognil-buffer-name)
+    (set (make-local-variable 'w3m-goto-article-function) #'seognil-goto-article)
+    (w3m-minor-mode t)
+    (setq buffer-read-only t)))
+
+;;;; dict-url is like "dict://key.[$DictID]/hit%20and%20miss"
+(defun seognil-goto-article (dict-url)
+  (let ((phrase (cadr (split-string (w3m-url-decode-string dict-url) "]/"))))
+    (seognil-search-phrase phrase)
+    t))
+
 (defun seognil-search ()
   "read the WORD from mini buffer and query it in DICTIONARY-NAME"
   (interactive)
@@ -112,26 +139,7 @@
                                    nil
                                    nil
                                    word)))
-    (with-current-buffer (get-buffer-create seognil-buffer-name)
-          (setq buffer-read-only nil)
-          (erase-buffer)
-
-          ;; collect the result from seognil-query-word-definition-in-dict
-          ;; if all returned values are nil, then no result
-          ;;(message "no result detected")
-          (loop for dict in seognil-dictionaries
-                do (progn
-                     (insert (concat "[dict: " dict "]<br/> <br/>"))
-                     (let ((result (seognil-query-word-definition-in-dict dict word)))
-                       (if result
-                           (insert result)
-                         (insert "No definitions found.")
-                         ))
-                     (insert "<br/> <br/>")))
-          
-          (w3m-buffer)
-          (switch-to-buffer seognil-buffer-name)
-          (setq buffer-read-only t))))
+    (seognil-search-phrase word)))
 
 ;;;; utils
 (defun seognil-parse-word-index-pair (line-content)
