@@ -1,6 +1,9 @@
 ;;; seognil.el --- query words in massaged dictionaries in lingoes format -*- Mode: Emacs-Lisp -*-
 
-;; Copyright (C) 2012 Madsen Zhang
+;; Copyright (C) 2019 Madsen Zhang
+
+;; Updated at 2019-04-13
+;; use updated emacsql and emacsql-sqlite for emacs 27
 
 ;; Author: md11235@gmail.com
 ;; Created: 2012-12-02
