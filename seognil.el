@@ -62,6 +62,7 @@
 (require 'thingatpt)
 (require 'parse-time)
 (require 'emacsql)
+(require 'emacsql-sqlite)
 
 (defconst *WORD-INDEX-SEPARATOR* ", "
   "the string between the word and its index position in the dict file")
@@ -103,22 +104,22 @@
                    word))))
 
 (defun seognil-search-phrase (word)
-  (with-current-buffer (get-buffer-create seognil-buffer-name)
-    (setq buffer-read-only nil)
-    (erase-buffer)
+    (with-current-buffer (get-buffer-create seognil-buffer-name)
+          (setq buffer-read-only nil)
+          (erase-buffer)
 
-    (loop for dict in seognil-dictionaries
-          do (progn
-               (insert (concat "[dict: " dict "]<br/> <br/>"))
-               (let ((result (seognil-query-word-definition-in-dict dict word)))
-                 (if result
-                     (insert result)
-                   (insert "No definitions found.")
-                   ))
-               (insert "<br/> <br/>")))
-    
-    (w3m-buffer)
-    (switch-to-buffer seognil-buffer-name)
+          (cl-loop for dict in seognil-dictionaries
+                do (progn
+                     (insert (concat "[dict: " dict "]<br/> <br/>"))
+                     (let ((result (seognil-query-word-definition-in-dict dict word)))
+                       (if result
+                           (insert result)
+                         (insert "No definitions found.")
+                         ))
+                     (insert "<br/> <br/>")))
+          
+          (w3m-buffer)
+          (switch-to-buffer seognil-buffer-name)
     (set (make-local-variable 'w3m-goto-article-function) #'seognil-goto-article)
     (w3m-minor-mode t)
     (setq buffer-read-only t)))
