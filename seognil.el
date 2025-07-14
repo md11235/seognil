@@ -33,6 +33,8 @@
 ;; 3. use it to dump contents of a dictionary file in the lingoes format
 ;; 4. rename the file extension ".output" of a dumped file to ".dict"
 ;; 5. use gzip to compress that file with the ".dict" extension.
+;; 6. sort the content of the file with the extension "idx" using "sort-fields"
+;;    with the variable "sort-fold-case" being nil.
 
 ;; Put this file into your load-path and the following into your
 
@@ -88,7 +90,7 @@
                                 (looking-at "[^,]*,")
                                 (buffer-substring-no-properties (match-beginning 0)
                                                                 (- (match-end 0) 1)))))
-            (message "word: %s, %d, %d, %d\n" current-word middle-line-number begin-line-number end-line-number)
+            ;; (message "word: %s, %d, %d, %d\n" current-word middle-line-number begin-line-number end-line-number)
             (cond
              ((string-equal word current-word)
               (setq begin-line-number (+ end-line-number 1)) ;; break out of the while
@@ -101,7 +103,7 @@
                                            *WORD-INDEX-SEPARATOR*)))
                 (message "got word: %s, line number: %s\n" (car result) (nth 1 result))
                 (setq end-result result)))
-             ((string-lessp word (downcase current-word))
+             ((string-lessp word current-word) ;;(string-lessp word (downcase current-word))
               (setq end-line-number (- middle-line-number 1)))
              (t
               (setq begin-line-number (+ middle-line-number 1)))))))
@@ -153,4 +155,25 @@
                      (insert "<br/> <br/>")))
           
           (w3m-buffer)
-          (switch-to-buffer seognil-buffer-name))))
+          (switch-to-buffer seognil-buffer-name)
+          (setq buffer-read-only t))))
+
+;;;; utils
+
+(defun seognil-sort-fields (field beg end)
+  "Sort lines in region lexicographically by the ARGth field of each line.
+Fields are separated by whitespace and numbered from 1 up.
+With a negative arg, sorts by the ARGth field counted from the right.
+Called from a program, there are three arguments:
+FIELD, BEG and END.  BEG and END specify region to sort.
+The variable `sort-fold-case' determines whether alphabetic case affects
+the sort order.
+sort specifically for seognil.."
+  (interactive "p\nr")
+  (let ;; To make `end-of-line' and etc. to ignore fields.
+      ((inhibit-field-text-motion t))
+    (sort-fields-1 field beg end
+		   (function (lambda ()
+			       (sort-skip-fields field)
+			       nil))
+		   (function (lambda () (skip-chars-forward "^,\t\n"))))))
