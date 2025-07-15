@@ -1,6 +1,9 @@
 ;;; seognil.el --- query words in massaged dictionaries in lingoes format -*- Mode: Emacs-Lisp -*-
 
-;; Copyright (C) 2012 Madsen Zhang
+;; Copyright (C) 2019 Madsen Zhang
+
+;; Updated at 2019-04-13
+;; use updated emacsql and emacsql-sqlite for emacs 27
 
 ;; Author: md11235@gmail.com
 ;; Created: 2012-12-02
@@ -24,37 +27,50 @@
 
 ;; This is an emacs lisp script to query words in dictionaries in lingoes format
 
-;; How to massage dictionaries from the lingoes format to be usable  by
-;; this program:
+;; How to massage one dictionary in the lingoes format to be usable by
+;; this program. suppose that one dictionary is named "ADict".
 
 ;; 1. download a java program from the url below:
 ;; http://dict4cn.googlecode.com/svn/trunk/importer/src/LingoesLd2Reader.java
 ;; 2. compile it
-;; 3. use it to dump contents of a dictionary file in the lingoes format
-;; 4. rename the file extension ".output" of a dumped file to ".dict"
-;; 5. use gzip to compress that file with the ".dict" extension.
-;; 6. sort the content of the file with the extension "idx" using "sort-fields"
-;;    with the variable "sort-fold-case" being nil.
+;; 3. use the compiled java program to dump contents of ADict.ld2
+;; 4. rename "ADict.ld2.output" to "ADict.ld2.dict"
+;; 5. it turns out that "ADict.ld2.idx" generated from step 3 does not have
+;;    all the words defined in the "ADict.ld2.dict" file. so regenerate the
+;;    idx file using one line of awk. for example:
+;;    awk -F "=" 'BEGIN {x=0}; {print $1 ", " x; x++}' ADict.ld2.dict > ADict.ld2.idx
+;; 6. sort the content of the new .idx file inside emacs using
+;;    "seognil-sort-fields" (which is defined in this program file)
+;;    with the elisp variable "sort-fold-case" being nil.
+;; 7. move "ADict.ld2.idx" and "ADict.ld2.dict" into a directory named
+;;    "ADict".
+;;    7.1 [OPTIONAL] use gzip to compress "ADict.ld2.dict" and set the variable
+;;        `seognil-use-gzipped-dictionaries' to t, in order to save harddisk space.
+;; 8. repeat steps 1~8 above for another dictionary.
+
+;; finaly, put all these dictionary directories, say "ADict", "BDict", "CDict"
+;; into another directory, for example "d:/src/lingoes/dict".
 
 ;; Put this file into your load-path and the following into your
 
 ;; ~/.emacs:
 ;; (require 'seognil)
 ;; (setq seognil-dictionary-path "d:/src/lingoes/dict")
-;; (setq seognil-dictionaries '("CollinsCobuild" "Collins"))
+;; (setq seognil-dictionaries '("ADict" "BDict" "CDict"))
 ;; (global-set-key (kbd "C-c d") 'seognil-search)
-
 
 ;;; Code:
 
 (require 'w3m)
-
-(provide 'seognil)
+(require 'thingatpt)
+(require 'parse-time)
+(require 'emacsql)
+(require 'emacsql-sqlite)
 
 (defconst *WORD-INDEX-SEPARATOR* ", "
   "the string between the word and its index position in the dict file")
 
-(defconst *DICT-FILENAME-EXTENSION* ".ld2.dict.gz"
+(defconst *DICT-FILENAME-EXTENSION* ".sqlite"
   "the postfix for dictionary file(where words and their definitions are stored")
 
 (defconst *INDEX-FILENAME-EXTENSION* ".ld2.idx"
@@ -65,6 +81,9 @@
 
 (defvar seognil-dictionaries nil
   "the list of dictionaries enabled")
+
+(defvar seognil-use-gzipped-dictionaries nil
+  "whether dictionaries are compressed using gzip.")
 
 (defvar seognil-buffer-name "*seognil*"
   "The name of the buffer of seognil.")
@@ -121,30 +140,30 @@
                                     (progn
                                       (end-of-line)
                                       (point)))))
+;; copied from http://www.emacswiki.org/emacs/ElispCookbook#toc6
+
+(defun chomp (str)
+  "Chomp leading and tailing whitespace from STR."
+  (while (string-match "\\`\n+\\|^\\s-+\\|\\s-+$\\|\n+\\'"
+                       str)
+    (setq str (replace-match "" t t str)))
+  str)
 
 (defun seognil-query-word-definition-in-dict (dictionary-name word)
-  (let ((word-index-cons (seognil-word-definition-position dictionary-name word)))
-    (if (consp word-index-cons)
-        (seognil-extract-word-definition-in-dict dictionary-name (nth 1 word-index-cons))
-      nil)))
+  (emacsql-with-connection
+      (dict-db (emacsql-sqlite (concat seognil-dictionary-path "/" dictionary-name "/" dictionary-name *DICT-FILENAME-EXTENSION*)))
+    (caar (emacsql dict-db
+                   [:select [definition]
+                            :from word_definitions
+                            :where (= word $s1)]
+                   word))))
 
-(defun seognil-search ()
-  "read the WORD from mini buffer and query it in DICTIONARY-NAME"
-  (interactive)
-  (let (word
-        ;; fixme: parse these two numbers on the fly
-        (begin-line-number 1)
-        (end-line-number 102385))
-    (setq word (read-from-minibuffer "Word:"))
-
+(defun seognil-search-phrase (word)
     (with-current-buffer (get-buffer-create seognil-buffer-name)
           (setq buffer-read-only nil)
           (erase-buffer)
 
-          ;; collect the result from seognil-query-word-definition-in-dict
-          ;; if all returned values are nil, then no result
-          ;;(message "no result detected")
-          (loop for dict in seognil-dictionaries
+          (cl-loop for dict in seognil-dictionaries
                 do (progn
                      (insert (concat "[dict: " dict "]<br/> <br/>"))
                      (let ((result (seognil-query-word-definition-in-dict dict word)))
@@ -156,9 +175,37 @@
           
           (w3m-buffer)
           (switch-to-buffer seognil-buffer-name)
-          (setq buffer-read-only t))))
+    (set (make-local-variable 'w3m-goto-article-function) #'seognil-goto-article)
+    (w3m-minor-mode t)
+    (setq buffer-read-only t)))
+
+;;;; dict-url is like "dict://key.[$DictID]/hit%20and%20miss"
+(defun seognil-goto-article (dict-url)
+  (let ((phrase (cadr (split-string (w3m-url-decode-string dict-url) "]/"))))
+    (seognil-search-phrase phrase)
+    t))
+
+(defun seognil-search ()
+  "read the WORD from mini buffer and query it in DICTIONARY-NAME"
+  (interactive)
+  (let ((word (thing-at-point 'word t)))
+    (setq word (chomp (read-string (if word
+                                       (format "Query Word(default %s):" word)
+                                     (format "Query Word:"))
+                                   nil
+                                   nil
+                                   word)))
+    (seognil-search-phrase word)))
 
 ;;;; utils
+(defun seognil-parse-word-index-pair (line-content)
+  (let ((current-line-content line-content)
+        word
+        index)
+    (setq word (car (split-string line-content
+                                  ", [0-9]+")))
+    (setq index (substring current-line-content (+ 2 (length word)) -1))
+    (cons word index)))
 
 (defun seognil-sort-fields (field beg end)
   "Sort lines in region lexicographically by the ARGth field of each line.
@@ -176,4 +223,10 @@ sort specifically for seognil.."
 		   (function (lambda ()
 			       (sort-skip-fields field)
 			       nil))
-		   (function (lambda () (skip-chars-forward "^,\t\n"))))))
+		   ;; (function (lambda () (skip-chars-forward "^,\t\n")))
+           (function (lambda ()
+                       (looking-at ".*\\(, [0-9]+\\)")
+                       (goto-char (match-beginning 1)))))))
+
+(provide 'seognil)
+
